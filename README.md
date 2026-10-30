@@ -25,9 +25,8 @@ I have also designed two roadmap diagrams. These are intentionally **simplified*
 
 **2. RTOS Roadmap (Overview)**
 [![RTOS Roadmap](docs/rtos-architecture.jpg)](docs/rtos-architecture.jpg)
-
 ## About the Author
-I am Morteza Ranjbar, an **Embedded Systems & AI Designer** and the founder of **Julectron**. I specialize in designing Real-Time architectures and deploying AI models on edge devices. This project is part of my journey to build Julectron.
+I am Morteza Ranjbar, an **Embedded Systems & AI Designer**, an **Electronics Circuit Designer (from scratch)**, and the founder of **Julectron**. I specialize in designing Real-Time architectures, developing custom hardware circuits, and deploying AI models on edge devices. This project is part of my journey to build Julectron.
 
 ## Connect with Me
 If you find this useful, follow my work:
