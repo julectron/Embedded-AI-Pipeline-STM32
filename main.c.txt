@@ -1,0 +1,129 @@
+/*
+ * Project: Embedded AI Pipeline on STM32
+ * Author: Morteza Ranjbar (Founder of Julectron)
+ * GitHub: https://github.com/julectron/Embedded-AI-Pipeline-STM32
+ * License: MIT (Attribution required - Please credit the author if used)
+ */
+#include "stm32f4xx_hal.h"
+#include <stdint.h>
+#include <string.h>
+#define ADC_BUFFER_SIZE 1024u
+#include <math.h>
+#include "weights.h"
+typedef enum {
+DMA_STATE_IDLE = 0,
+DMA_STATE_HALF,
+DMA_STATE_FULL} 
+DMA_STATE;
+volatile DMA_STATE dma_state = DMA_STATE_IDLE;
+float mean(float*data,int size){float sum=0.0f;
+for(int i=0;i<size; i++)
+sum+=data[i];
+return sum/size;}
+float rms(float* data, int size) {
+float sum = 0.0f;
+for(int i = 0; i < size; i++)
+sum += data[i] * data[i];
+return sqrtf(sum / size);}
+float peak(float* data, int size) {
+float maxVal = data[0];
+for(int i = 1; i < size; i++)
+if(data[i] > maxVal)
+maxVal = data[i];
+return maxVal;}
+float window[ADC_BUFFER_SIZE];
+void Generate_Hann_Window(void){for(uint16_t n=0; n<ADC_BUFFER_SIZE; n++){
+window[n]=0.5f*(1.0f-cosf((2.0f* M_PI* n)/(ADC_BUFFER_SIZE-1)));}}
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
+TIM_HandleTypeDef htim2;
+volatile uint16_t adc_buffer[ADC_BUFFER_SIZE];
+float processing_buffer[ADC_BUFFER_SIZE/2];
+volatile uint8_t adc_data_ready=0;
+volatile uint8_t adc_half_ready=0;
+float alpha=0.2;
+float Filter(float input, float *state){
+*state = alpha * input + (1 - alpha) * (*state);
+return *state;}
+const float THRESHOLD=0.5f;
+float Normalize01(float x){
+float  y=x/4095.0f;
+if(y<0.0f) y=0.0f;
+if(y>1.0f) y=1.0f;
+return y;}
+void SystemClock_Config(void);
+static void ADC_DMA_Start(void);
+static void Error_Handler(void);
+static void Process_ADC_Block(uint16_t offset);
+int main(void){HAL_Init();SystemClock_Config();Generate_Hann_Window();
+MX_GPIO_Init();
+MX_DMA_Init();
+MX_ADC1_Init();
+MX_TIM2_Init();
+ADC_DMA_Start();
+if(HAL_TIM_Base_Start(&htim2) !=HAL_OK){Error_Handler();}
+while(1){
+if(dma_state == DMA_STATE_HALF){
+dma_state = DMA_STATE_IDLE;
+Process_ADC_Block(0);  }
+if(dma_state == DMA_STATE_FULL){
+dma_state = DMA_STATE_IDLE;
+Process_ADC_Block(ADC_BUFFER_SIZE / 2);}}}
+static void ADC_DMA_Start(void){if(HAL_ADC_Start_DMA(&hadc1,(uint32_t*)adc_buffer,ADC_BUFFER_SIZE) !=HAL_OK){Error_Handler();}}
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef*hadc){if(hadc->Instance==ADC1){dma_state=DMA_STATE_FULL;}}
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef*hadc){if(hadc->Instance==ADC1){dma_state=DMA_STATE_HALF;}}
+static void Process_ADC_Block(uint16_t offset){
+float filtered_state = 0.0f;
+for(uint16_t i = 0; i < ADC_BUFFER_SIZE / 2; i++){
+float x = (float)adc_buffer[offset + i];
+float normalized = Normalize01(x);
+float filtered_val = Filter(normalized, &filtered_state);
+processing_buffer[i] = filtered_val * window[i];}
+float feature_mean = mean(processing_buffer, ADC_BUFFER_SIZE / 2);
+float feature_rms  = rms(processing_buffer, ADC_BUFFER_SIZE / 2);
+float feature_peak = peak(processing_buffer, ADC_BUFFER_SIZE / 2);
+float y =
+W[0] * feature_mean +
+W[1] * feature_rms +
+W[2] * feature_peak +
+W[3];
+float out = 1.0f / (1.0f + expf(-y));
+int label = (out < THRESHOLD);
+HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5,
+label ? GPIO_PIN_SET : GPIO_PIN_RESET);}
+void MX_DMA_Init(void){
+HAL_RCC_DMA2_CLK_ENABLE();
+hdma_adc1.Instance=DMA2_Stream0;
+hdma_adc1.Init.Channel=DMA_CHANNEL_0;
+hdma_adc1.Init.Direction=DMA_PERIPH_TO_MEMORY;
+hdma_adc1.Init.Mode=DMA_CIRCULAR;
+__HAL_LINKDMA(&hadc1,DMA_Handle,hdma_adc1);
+hdma_adc1.Init.PeriphInc=DMA_PINC_DISABLE;
+hdma_adc1.Init.MemInc=DMA_MINC_ENABLE;
+hdma_adc1.Init.PeriphDataAlignment=DMA_PDATAALIGN_HALFWORD;
+hdma_adc1.Init.MemDataAlignment=DMA_MDATAALIGN_HALFWORD;
+hdma_adc1.Init.Priority=DMA_PRIORITY_HIGH;
+if(HAL_DMA_Init(&hdma_adc1) !=HAL_OK){Error_Handler();}}
+void MX_ADC1_Init(void){ADC_ChannelConfTypeDef sConfig={0};hadc1.Instance=ADC1;
+hadc1.Init.Resolution=ADC_RESOLUTION_12B;
+hadc1.Init.ExternalTrigConv=ADC_EXTERNALTRIGCONV_T2_TRGO;if(HAL_ADC_Init(&hadc1) !=HAL_OK){Error_Handler();}
+sConfig.Channel=ADC_CHANNEL_0;sConfig .Rank=1;
+sConfig.SamplingTime=ADC_SAMPLETIME_84CYCLES;
+if(HAL_ADC_ConfigChannel(&hadc1,&sConfig) !=HAL_OK){Error_Handler();}}
+void MX_TIM2_Init(void){TIM_MasterConfigTypeDef sMasterConfig={0};
+htim2.Instance=TIM2; htim2.Init.Prescaler=84-1;htim2.Init.CounterMode=TIM_COUNTERMODE_UP;
+htim2.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
+htim2.Init.Period=1000-1;if(HAL_TIM_Base_Init(&htim2) !=HAL_OK){Error_Handler();}
+sMasterConfig.MasterOutputTrigger=TIM_TRGO_UPDATE;
+sMasterConfig.MasterSlaveMode=TIM_MASTERSLAVEMODE_DISABLE;
+if(HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) !=HAL_OK){Error_Handler();}}
+void MX_GPIO_Init(void){__HAL_RCC_GPIOA_CLK_ENABLE();GPIO_InitTypeDef GPIO_InitStruct={0};
+GPIO_InitStruct.Pin=GPIO_PIN_0;
+GPIO_InitStruct.Mode=GPIO_MODE_ANALOG;
+HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+GPIO_InitStruct.Pin=GPIO_PIN_5;
+GPIO_InitStruct.Mode=GPIO_MODE_OUTPUT_PP;
+GPIO_InitStruct.Pull=GPIO_NOPULL;
+GPIO_InitStruct.Speed=GPIO_SPEED_FREQ_HIGH;
+HAL_GPIO_Init(GPIOA,&GPIO_InitStruct);
+HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5, GPIO_PIN_RESET);}
