@@ -23,6 +23,8 @@ I have also designed two roadmap diagrams. These are intentionally **simplified*
 **1. Embedded Systems Pipeline**
 [![Embedded Systems Pipeline](docs/embedded-ai-pipeline.jpg)](docs/embedded-ai-pipeline.jpg)
 
+📖 **[Architecture Deep Dive](docs/embedded-ai-roadmap.md)**
+
 **2. RTOS Roadmap (Overview)**
 [![RTOS Roadmap](docs/rtos-architecture.jpg)](docs/rtos-architecture.jpg)
 ## About the Author
