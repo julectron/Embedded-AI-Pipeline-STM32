@@ -38,9 +38,10 @@ If you find this useful, follow my work:
 **Author:** Morteza Ranjbar (Founder of Julectron)  
 **License:** MIT (Attribution required)
 ---
+---
 ## 📚 Further Reading
 
-If you want to dive deeper into the system architecture and data management concepts, explore the following documents:
+If you want to explore **my mental model** and dive deeper into the system architecture and data management concepts, explore the following documents:
 
 - 🏗️ **[Architecture Deep Dive (Roadmap)](docs/embedded-ai-roadmap.md)** - Detailed breakdown of the C++ pipeline stages.
 - 💾 **[Data Management Concepts (Part 1)](docs/data-management-part1.md)** - Core concepts like Data Path, Flow, and Integrity.
