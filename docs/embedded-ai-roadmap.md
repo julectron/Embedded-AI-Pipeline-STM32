@@ -13,10 +13,9 @@ In this stage, the raw data is prepared for processing. It includes:
 - Defining the necessary memory buffers.
 - Establishing the communication mechanisms between peripherals.
 - Calculating the optimal buffer size.
-- **Crucial Focus:** Attention to `Data Path`, `Data Flow`, `Data Consistency`, `Data Integrity`, `Ownership`, `Data Contract`, `Data Insurance`, and `Data Lifetime`. 
-*(I will elaborate on these critical concepts in future documents).*
+- **Crucial Focus:** Attention to `Data Path`, `Data Flow`, `Data Consistency`, `Data Integrity`, `Ownership`, `Data Contract`, `Data Insurance`, and `Data Lifetime`. > 📖 **Deep Dive:** [Read the detailed breakdown of Data Management Concepts (Part 1) here](data-management-part1.md).
 
-## Stage 3: Feature Extraction & Processing
+  ## Stage 3: Feature Extraction & Processing
 *Note: Feature extraction can technically sit between preprocessing and processing. However, in my specific architecture, I have grouped it within the processing stage.*
 
 This stage involves complex mathematical operations. The most **critical rule** here is:
