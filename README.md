@@ -23,8 +23,6 @@ I have also designed two roadmap diagrams. These are intentionally **simplified*
 **1. Embedded Systems Pipeline**
 [![Embedded Systems Pipeline](docs/embedded-ai-pipeline.jpg)](docs/embedded-ai-pipeline.jpg)
 
-📖 **[Architecture Deep Dive](docs/embedded-ai-roadmap.md)**
-
 **2. RTOS Roadmap (Overview)**
 [![RTOS Roadmap](docs/rtos-architecture.jpg)](docs/rtos-architecture.jpg)
 ## About the Author
@@ -39,3 +37,11 @@ If you find this useful, follow my work:
 ---
 **Author:** Morteza Ranjbar (Founder of Julectron)  
 **License:** MIT (Attribution required)
+---
+## 📚 Further Reading
+
+If you want to dive deeper into the system architecture and data management concepts, explore the following documents:
+
+- 🏗️ **[Architecture Deep Dive (Roadmap)](docs/embedded-ai-roadmap.md)** - Detailed breakdown of the C++ pipeline stages.
+- 💾 **[Data Management Concepts (Part 1)](docs/data-management-part1.md)** - Core concepts like Data Path, Flow, and Integrity.
+- ⚙️ **[Peripheral Roles in Data Flow (Part 2)](docs/data-management-part2.md)** - Understanding the three roles of peripherals.
